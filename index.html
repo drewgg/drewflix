@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drewflix</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo">Drewflix</div>
+    </header>
+
+    <main>
+        <section id="featured-show" class="hero">
+            <!-- Background Image Layer -->
+            <div id="hero-bg" class="hero-bg"></div>
+            
+            <!-- Fade Transition Layer -->
+            <div id="hero-fade-layer" class="hero-fade-layer"></div>
+            
+            <!-- Content Layer -->
+            <div id="hero-content-container" class="hero-content">
+                <!-- Featured show details injected here -->
+            </div>
+        </section>
+
+        <section class="browse-section">
+            <h2>Recommended for You</h2>
+            <div id="show-grid" class="grid">
+                <!-- Show cards injected here -->
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content" id="modal-content">
+            <button class="close-btn" id="close-modal">&times;</button>
+            <div id="modal-body">
+                <!-- Modal details and Trailer iframe injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Ensure data.js is loaded before script.js -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

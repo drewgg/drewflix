@@ -1,0 +1,267 @@
+:root {
+    --bg-color: #141414;
+    --text-color: #ffffff;
+    --accent-color: #e50914;
+    --card-bg: #2f2f2f;
+    --overlay-bg: rgba(0, 0, 0, 0.85);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+}
+
+header {
+    padding: 20px 4%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+}
+
+.logo {
+    color: var(--accent-color);
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Featured Hero Section */
+.hero {
+    height: 60vh;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 4%;
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+}
+
+.hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--bg-color) 0%, transparent 60%);
+}
+
+.hero-fade-layer {
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg-color);
+    opacity: 0;
+    z-index: 10;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+}
+
+.hero.is-fading .hero-fade-layer {
+    opacity: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 5;
+    max-width: 600px;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+}
+
+.hero-description {
+    display:none;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.btn {
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 10px 24px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: #b20710;
+}
+
+.btn-secondary {
+    background-color: rgba(109, 109, 110, 0.7);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(109, 109, 110, 1);
+}
+
+/* Grid Section */
+.browse-section {
+    padding: 0 4% 40px;
+}
+
+.browse-section h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.show-card {
+    background-color: var(--card-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: relative;
+    aspect-ratio: 16 / 10.35;
+}
+
+.show-card:hover {
+    transform: scale(1.05);
+    z-index: 2;
+}
+
+.show-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.show-card-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    padding: 10px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay-bg);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-overlay.is-open {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--bg-color);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 8px;
+    position: relative;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: white;
+    color: black;
+}
+
+.modal-header-img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.modal-details {
+    padding: 30px;
+}
+
+.modal-title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.modal-desc {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    color: #d2d2d2;
+}
+
+.watch-section {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.watch-desc {
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+/* Embedded Trailer Styles */
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+    width: 100%;
+    background-color: #000;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
