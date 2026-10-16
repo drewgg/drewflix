@@ -19,6 +19,9 @@ const RANDOMIZE_RECOMMENDED = true;
 // How long each shows stay in the featured/hero area.
 const FEATURED_SHOW_CYCLE_TIME = 5;
 
+// Maximum number of shows to display in the main "Recommended for You" section.
+const MAX_RECOMMENDED_SHOWS = 8;
+
  
 /**
  * == SECTION 2 --- Show Configuration ==
@@ -40,6 +43,9 @@ const FEATURED_SHOW_CYCLE_TIME = 5;
  * 
  * "watchDescription" -- string [HTML]
  *  - Displays above the "watchLinks" buttons on the show details module.
+ * 
+ * "tags" -- array
+ *  - Shows will display under each and every one of their tags. Tags are also displayed on the show details page.
  * 
  * "images" -- array
  *  - Each show uses images in multiple areas. This array holds/configures them all.
@@ -80,6 +86,7 @@ const localShowData = [
     "title": "Kipo and the Age of Wonderbeasts",
     "description": "In a post-apocalyptic world mutants (\"mutes\") rule the surface and most humans live underground in \"burrows\". Kipo Oak is a teenage burrow girl who get's ejected from her burrow to the surface and must find her way home. 100% rating on Rotten Tomatoes.<br><br><strong>You might like this show if you like:</strong><br>Ted Lasso, The Owl House",
     "watchDescription": "The entire series is available on Netflix",
+    "tags": ["Animated", "Adventure", "Post-Apocalyptic"],
     "images": {
       "thumbnail": {
         "src": "./images/kipo.png",

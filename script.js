@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const grid = document.getElementById('show-grid');
+    const mainContainer = document.querySelector('main');
+    const recommendedGrid = document.getElementById('show-grid');
     const hero = document.getElementById('featured-show');
     const heroBg = document.getElementById('hero-bg');
     const heroContentContainer = document.getElementById('hero-content-container');
@@ -11,6 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let showData = localShowData;
     let gridData = [];
     
+    // Config fallbacks (in case they are missing from data.js)
+    const cycleTime = typeof FEATURED_SHOW_CYCLE_TIME !== 'undefined' ? FEATURED_SHOW_CYCLE_TIME : 5;
+    const maxRecommended = typeof MAX_RECOMMENDED_SHOWS !== 'undefined' ? MAX_RECOMMENDED_SHOWS : 10;
+    const isRandomized = typeof RANDOMIZE_RECOMMENDED !== 'undefined' ? RANDOMIZE_RECOMMENDED : false;
+
     // Cycling state
     let currentCycleIndex = 0;
     let cycleInterval;
@@ -18,72 +24,92 @@ document.addEventListener('DOMContentLoaded', () => {
     initUI(showData);
 
     function initUI(data) {
-        // 1. Try to find an explicitly featured show
+        // 1. Setup Hero Section
         let featuredShow = data.find(show => show.featured);
         
-        // 2. Fallback: pick a random show that has a banner image
         if (!featuredShow) {
             const bannerShows = data.filter(show => show.images?.banner?.src);
-            
             if (bannerShows.length > 0) {
                 let recentFeatured = JSON.parse(localStorage.getItem('drewflix_recent_featured') || '[]');
                 let availableShows = bannerShows.filter(show => !recentFeatured.includes(show.id));
                 
-                if (availableShows.length === 0) {
-                    availableShows = bannerShows;
-                }
+                if (availableShows.length === 0) availableShows = bannerShows;
 
                 const randomIndex = Math.floor(Math.random() * availableShows.length);
                 featuredShow = availableShows[randomIndex];
 
                 recentFeatured.push(featuredShow.id);
-                if (recentFeatured.length > 2) {
-                    recentFeatured.shift(); 
-                }
+                if (recentFeatured.length > 2) recentFeatured.shift(); 
                 localStorage.setItem('drewflix_recent_featured', JSON.stringify(recentFeatured));
             } else {
-                // 3. Final fallback: just use the very first show
                 featuredShow = data[0]; 
             }
         }
         
-        // Build and shuffle grid data
+        // 2. Build and shuffle primary grid data
         gridData = [...data];
-        if (RANDOMIZE_RECOMMENDED) {
+        if (isRandomized) {
             for (let i = gridData.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [gridData[i], gridData[j]] = [gridData[j], gridData[i]];
             }
         }
         
-        // Synchronize cycle start index with the initial featured show
         currentCycleIndex = gridData.findIndex(s => s.id === featuredShow.id);
         if (currentCycleIndex === -1) currentCycleIndex = 0;
 
         renderHero(featuredShow);
-        gridData.forEach(show => renderCard(show));
-        
         startHeroCycle();
+
+        // 3. Render "Recommended for You" (Respecting MAX_RECOMMENDED_SHOWS)
+        const recommendedShows = gridData.slice(0, maxRecommended);
+        recommendedShows.forEach(show => {
+            recommendedGrid.appendChild(createCardElement(show));
+        });
+
+        // 4. Generate Tag Grids
+        const tagsSet = new Set();
+        data.forEach(show => {
+            if (show.tags && Array.isArray(show.tags)) {
+                show.tags.forEach(tag => tagsSet.add(tag));
+            }
+        });
+        
+        const uniqueTags = Array.from(tagsSet).sort();
+        uniqueTags.forEach(tag => {
+            const showsWithTag = data.filter(show => show.tags && show.tags.includes(tag));
+            
+            if (showsWithTag.length > 0) {
+                const section = document.createElement('section');
+                section.className = 'browse-section';
+                section.innerHTML = `
+                    <h2>${tag}</h2>
+                    <div class="grid"></div>
+                `;
+                const tagGrid = section.querySelector('.grid');
+                showsWithTag.forEach(show => {
+                    tagGrid.appendChild(createCardElement(show));
+                });
+                mainContainer.appendChild(section);
+            }
+        });
     }
 
-    // -- Hero Cycling Logic --
+    // -- Hero Logic --
     function startHeroCycle() {
-        if (FEATURED_SHOW_CYCLE_TIME > 0) {
+        if (cycleTime > 0) {
             cycleInterval = setInterval(() => {
                 currentCycleIndex = (currentCycleIndex + 1) % gridData.length;
                 transitionHero(gridData[currentCycleIndex]);
-            }, FEATURED_SHOW_CYCLE_TIME * 1000);
+            }, cycleTime * 1000);
         }
     }
 
     function transitionHero(nextShow) {
-        // Add CSS class to fade to black
         hero.classList.add('is-fading');
-        
-        // Wait for the CSS transition (0.5s) to complete before swapping content
         setTimeout(() => {
             renderHero(nextShow);
-            hero.classList.remove('is-fading'); // Fade back in
+            hero.classList.remove('is-fading'); 
         }, 500); 
     }
 
@@ -94,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         heroBg.style.backgroundImage = `url('${imgSrc}')`;
         heroBg.style.backgroundPosition = imgPos;
         
-        // Determine if there is a trailer link
         let trailerButtonHtml = '';
         if (show.watchLinks) {
             const trailerLink = show.watchLinks.find(link => link.platform === "Trailer");
@@ -111,7 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function renderCard(show) {
+    // Returns a configured DOM element for a show card
+    function createCardElement(show) {
         const article = document.createElement('article');
         article.className = 'show-card';
         article.onclick = () => openModal(show.id);
@@ -123,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="${imgSrc}" alt="Thumbnail" style="object-position: ${imgPos};">
             <div class="show-card-title">${show.title}</div>
         `;
-        grid.appendChild(article);
+        return article;
     }
 
     // -- Modal and Actions --
@@ -133,13 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let linksHtml = '';
         if (show.watchLinks && show.watchLinks.length > 0) {
-            // Keep all links, including the trailer. Apply the secondary button style to the trailer for consistency.
             linksHtml = show.watchLinks
                 .map(link => {
                     const btnClass = link.platform === "Trailer" ? "btn btn-secondary" : "btn";
                     return `<a href="${link.url}" target="_blank" class="${btnClass}">${link.platform}</a>`;
                 })
                 .join('');
+        }
+        
+        let tagsHtml = '';
+        if (show.tags && show.tags.length > 0) {
+            tagsHtml = `<div class="modal-tags">
+                ${show.tags.map(tag => `<span class="tag-pill">${tag}</span>`).join('')}
+            </div>`;
         }
 
         const imgSrc = show.images?.banner?.src || show.images?.thumbnail?.src;
@@ -149,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="${imgSrc}" class="modal-header-img" style="object-position: ${imgPos};" alt="Header">
             <div class="modal-details">
                 <h2 class="modal-title">${show.title}</h2>
+                ${tagsHtml}
                 <div class="modal-desc">${show.description}</div>
                 
                 <div class="watch-section">
@@ -162,11 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         modalOverlay.classList.add('is-open');
-        clearInterval(cycleInterval); // Pause cycle while modal is open
+        clearInterval(cycleInterval); 
     };
 
     window.openTrailer = (url) => {
-        // Extract standard video ID from watch link or youtu.be shortlink
         let videoId = '';
         if (url.includes('v=')) {
             videoId = url.split('v=')[1].split('&')[0];
@@ -175,14 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (videoId) {
-            // Re-use the existing modal but swap the internal layout for an iframe
             modalBody.innerHTML = `
                 <div class="video-container">
                     <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; encrypted-media;" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
                 </div>
             `;
             modalOverlay.classList.add('is-open');
-            clearInterval(cycleInterval); // Pause cycle
+            clearInterval(cycleInterval); 
         } else {
             console.error("Could not parse YouTube ID from provided Trailer link:", url);
         }
@@ -190,9 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal() {
         modalOverlay.classList.remove('is-open');
-        // Clear iframe or data so video stops playing immediately
         modalBody.innerHTML = ''; 
-        startHeroCycle(); // Resume cycle
+        startHeroCycle(); 
     }
 
     closeModalBtn.addEventListener('click', closeModal);
