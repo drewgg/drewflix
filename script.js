@@ -31,14 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const bannerShows = data.filter(show => show.images?.banner?.src);
             if (bannerShows.length > 0) {
                 let recentFeatured = JSON.parse(localStorage.getItem('drewflix_recent_featured') || '[]');
-                let availableShows = bannerShows.filter(show => !recentFeatured.includes(show.id));
+
+                // Use show.title instead of ID for persistent storage memory
+                let availableShows = bannerShows.filter(show => !recentFeatured.includes(show.title));
                 
                 if (availableShows.length === 0) availableShows = bannerShows;
 
                 const randomIndex = Math.floor(Math.random() * availableShows.length);
                 featuredShow = availableShows[randomIndex];
 
-                recentFeatured.push(featuredShow.id);
+                recentFeatured.push(featuredShow.title);
                 if (recentFeatured.length > 2) recentFeatured.shift(); 
                 localStorage.setItem('drewflix_recent_featured', JSON.stringify(recentFeatured));
             } else {
@@ -55,13 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        currentCycleIndex = gridData.findIndex(s => s.id === featuredShow.id);
+        currentCycleIndex = gridData.findIndex(s => s === featuredShow);
         if (currentCycleIndex === -1) currentCycleIndex = 0;
 
         renderHero(featuredShow);
         startHeroCycle();
 
-        // 3. Render "Recommended for You" (Respecting MAX_RECOMMENDED_SHOWS)
+        // 3. Render "Recommended for You"
         const recommendedShows = gridData.slice(0, maxRecommended);
         recommendedShows.forEach(show => {
             recommendedGrid.appendChild(createCardElement(show));
@@ -116,6 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHero(show) {
         const imgSrc = show.images?.banner?.src || show.images?.thumbnail?.src;
         const imgPos = show.images?.banner?.layouts?.hero || 'center center';
+        
+        // Find the absolute original index for the modal reference
+        const originalIndex = showData.indexOf(show);
 
         heroBg.style.backgroundImage = `url('${imgSrc}')`;
         heroBg.style.backgroundPosition = imgPos;
@@ -131,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         heroContentContainer.innerHTML = `
             <h1 class="hero-title">${show.title}</h1>
             <div class="hero-description">${show.description}</div>
-            <button class="btn" onclick="openModal('${show.id}')">More Info</button>
+            <button class="btn" onclick="openModal(${originalIndex})">More Info</button>
             ${trailerButtonHtml}
         `;
     }
@@ -140,7 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function createCardElement(show) {
         const article = document.createElement('article');
         article.className = 'show-card';
-        article.onclick = () => openModal(show.id);
+        
+        // Find the absolute original index for the modal reference
+        const originalIndex = showData.indexOf(show);
+        article.onclick = () => openModal(originalIndex);
         
         const imgSrc = show.images?.thumbnail?.src;
         const imgPos = show.images?.thumbnail?.layouts?.recommended || 'center center';
@@ -153,8 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -- Modal and Actions --
-    window.openModal = (id) => {
-        const show = showData.find(s => String(s.id) === String(id));
+    window.openModal = (index) => {
+        // Look up by original array index instead of ID
+        const show = showData[index];
         if (!show) return;
 
         let linksHtml = '';
